@@ -1,104 +1,370 @@
-# AgentCore Project
+# AWS Bedrock Customer Support Agent
 
-This project was created with the [AgentCore CLI](https://github.com/aws/agentcore-cli).
+An AI-powered customer support agent built with **Python, Amazon Bedrock, and Amazon Bedrock AgentCore**.
 
-## Project Structure
+The agent is designed to handle common customer-support scenarios by combining a foundation model with purpose-built tools. It can answer product-related questions, retrieve return-policy information, and assist with troubleshooting by searching external sources.
 
+The project demonstrates a practical approach to building, testing, and deploying an AI agent on AWS using a code-based Python architecture.
+
+## 🚀 Overview
+
+This project implements a customer-support AI agent capable of:
+
+* Answering product-related questions
+* Retrieving and explaining return policies
+* Assisting customers with troubleshooting
+* Using external web information when additional context is required
+* Selecting the appropriate tool based on the user's request
+* Running locally during development
+* Deploying the agent to Amazon Bedrock AgentCore Runtime
+* Invoking the deployed agent through the AgentCore CLI
+
+The architecture follows an **agent + tools** approach rather than implementing all business logic directly inside the application.
+
+## 🏗️ Architecture
+
+```text
+                    ┌──────────────────────┐
+                    │      User / Client   │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │   Customer Support   │
+                    │        Agent         │
+                    │       (Python)       │
+                    └──────────┬───────────┘
+                               │
+                    ┌──────────┴──────────┐
+                    │                     │
+                    ▼                     ▼
+          ┌──────────────────┐   ┌──────────────────┐
+          │ Amazon Bedrock   │   │     Agent Tools  │
+          │ Foundation Model │   │                  │
+          └──────────────────┘   └────────┬─────────┘
+                                          │
+                         ┌────────────────┼────────────────┐
+                         │                │                │
+                         ▼                ▼                ▼
+                  Product Lookup    Return Policy    Web Search
+                         │                │                │
+                         └────────────────┴────────────────┘
+                                          │
+                                          ▼
+                               ┌──────────────────────┐
+                               │ Amazon Bedrock       │
+                               │ AgentCore Runtime    │
+                               └──────────────────────┘
 ```
-my-project/
-├── AGENTS.md               # AI coding assistant context
+
+## ✨ Key Capabilities
+
+### Product Support
+
+The agent can understand customer questions about products and provide relevant information using the available product-support tools.
+
+Example:
+
+```text
+User:
+What is the warranty period for this product?
+
+Agent:
+The product is covered by the standard warranty policy...
+```
+
+### Return Policy
+
+The agent can retrieve return-policy information and explain the applicable policy to customers in natural language.
+
+Example:
+
+```text
+User:
+Can I return my product after 20 days?
+
+Agent:
+According to the current return policy...
+```
+
+### Troubleshooting
+
+When the available product information is not sufficient, the agent can use web-search capabilities to find relevant troubleshooting information.
+
+Example:
+
+```text
+User:
+My device keeps disconnecting from Wi-Fi. How can I fix it?
+
+Agent:
+I'll look for troubleshooting information related to this issue...
+```
+
+## 🧠 Agent Design
+
+The application follows a tool-enabled agent architecture.
+
+Instead of implementing a large number of conditional statements such as:
+
+```text
+if question == product:
+    ...
+elif question == return_policy:
+    ...
+elif question == troubleshooting:
+    ...
+```
+
+the agent uses the foundation model to understand the user's intent and determine which capability should be used.
+
+This makes the architecture easier to extend with additional tools and business capabilities.
+
+## ☁️ AWS Services
+
+The project uses the following AWS technologies:
+
+| Service                      | Purpose                           |
+| ---------------------------- | --------------------------------- |
+| **Amazon Bedrock**           | Foundation model for the AI agent |
+| **Amazon Bedrock AgentCore** | Runtime and agent deployment      |
+| **AWS IAM**                  | Authentication and authorization  |
+| **AWS Cloud infrastructure** | Hosting and runtime execution     |
+
+The AgentCore CLI provides commands for creating projects, running agents locally, deploying them to AWS, checking status, and invoking deployed agents.
+
+## 🛠️ Technology Stack
+
+* **Python**
+* **Amazon Bedrock**
+* **Amazon Bedrock AgentCore**
+* **Strands Agents**
+* **AWS SDK / Boto3**
+* **AWS IAM**
+* **AgentCore CLI**
+
+## 📁 Project Structure
+
+```text
+aws-bedrock-customer-support-agent/
+│
 ├── agentcore/
-│   ├── agentcore.json      # Project config (agents, memories, credentials, gateways, evaluators)
-│   ├── aws-targets.json    # Deployment targets (account + region)
-│   ├── .env.local          # Secrets — API keys (gitignored)
-│   ├── .llm-context/       # TypeScript type definitions for AI assistants
-│   │   ├── agentcore.ts    # AgentCoreProjectSpec types
-│   │   ├── aws-targets.ts  # Deployment target types
-│   │   └── mcp.ts          # Gateway and MCP tool types
-│   └── cdk/                # CDK infrastructure (@aws/agentcore-cdk)
-├── app/                    # Agent application code
-└── evaluators/             # Custom evaluator code (if any)
+│   ├── agentcore.json
+│   └── aws-targets.json
+│
+├── app/
+│   └── CustomerSupport/
+│       ├── main.py
+│       └── pyproject.toml
+│
+├── .gitignore
+├── README.md
+└── ...
 ```
 
-## Getting Started
+The AgentCore project structure separates agent configuration from the Python application code and AWS deployment targets.
 
-### Prerequisites
+## ⚙️ Prerequisites
 
-- **Node.js** 20.x or later
-- **Python 3.10+** and **uv** for Python agents ([install uv](https://docs.astral.sh/uv/getting-started/installation/))
-- **AWS credentials** configured (`aws configure` or environment variables)
-- **Docker** (only for Container build agents)
+Before running the project, make sure you have:
 
-### Development
+* Python 3.10+
+* Node.js 20+
+* npm
+* AWS CLI
+* An AWS account
+* AWS credentials configured locally
+* Required IAM permissions
+* Access to the selected Amazon Bedrock foundation model
 
-Run your agent locally:
+AWS's current AgentCore documentation lists Python 3.10+ and Node.js 20+ among the prerequisites for the CLI-based Python agent workflow.
+
+## 🔐 AWS Configuration
+
+Configure your AWS credentials using the AWS CLI:
+
+```bash
+aws configure
+```
+
+Verify that the credentials are available:
+
+```bash
+aws sts get-caller-identity
+```
+
+Make sure the AWS identity being used has the permissions required to access Amazon Bedrock and deploy resources through AgentCore.
+
+## 📦 Install AgentCore CLI
+
+Install the AgentCore CLI:
+
+```bash
+npm install -g @aws/agentcore
+```
+
+Verify the installation:
+
+```bash
+agentcore --help
+```
+
+The current AWS AgentCore CLI is distributed through npm and provides commands for creating, developing, deploying, and invoking agents.
+
+## ▶️ Run Locally
+
+Navigate to the project directory:
+
+```bash
+cd aws-bedrock-customer-support-agent
+```
+
+Start the local development environment:
 
 ```bash
 agentcore dev
 ```
 
-### Deployment
+This starts the local AgentCore development environment and allows the agent to be tested before deploying it to AWS.
 
-Deploy to AWS:
+You can then interact with the agent using the available development interface.
+
+## 🚀 Deploy to AWS
+
+Deploy the agent to Amazon Bedrock AgentCore Runtime:
 
 ```bash
 agentcore deploy
 ```
 
-## Commands
+The deployment process packages the application and provisions the required AWS infrastructure for the AgentCore Runtime.
 
-| Command | Description |
-| --- | --- |
-| `agentcore create` | Create a new AgentCore project |
-| `agentcore add` | Add resources (agent, memory, credential, gateway, evaluator, policy) |
-| `agentcore remove` | Remove resources |
-| `agentcore dev` | Run agent locally with hot-reload |
-| `agentcore deploy` | Deploy to AWS via CDK |
-| `agentcore status` | Show deployment status |
-| `agentcore invoke` | Invoke agent (local or deployed) |
-| `agentcore logs` | View agent logs |
-| `agentcore traces` | View agent traces |
-| `agentcore eval` | Run evaluations |
-| `agentcore package` | Package agent artifacts |
-| `agentcore validate` | Validate configuration |
-| `agentcore pause` | Pause a deployed agent |
-| `agentcore resume` | Resume a paused agent |
-| `agentcore fetch` | Fetch remote resource definitions |
-| `agentcore import` | Import existing resources |
-| `agentcore update` | Check for CLI updates |
+## 🔎 Check Deployment Status
 
-## Configuration
+After deployment:
 
-Edit the JSON files in `agentcore/` to configure your project. See `agentcore/.llm-context/` for type definitions and validation constraints.
+```bash
+agentcore status
+```
 
-The project uses a **flat resource model** — agents, memories, credentials, gateways, evaluators, and policies are top-level arrays in `agentcore.json`. Resources are independent; agents discover memories and credentials at runtime via environment variables or SDK calls.
+This can be used to inspect the deployed AgentCore resources.
 
-## Resources
+## 💬 Invoke the Agent
 
-| Resource | Purpose |
-| --- | --- |
-| Agent (runtime) | HTTP, MCP, or A2A agent deployed to AgentCore Runtime |
-| Memory | Persistent context storage with configurable strategies |
-| Credential | API key or OAuth credential providers |
-| Gateway | MCP gateway that routes tool calls to targets |
-| Gateway Target | Tool implementation (Lambda, MCP server, OpenAPI, Smithy, API Gateway) |
-| Evaluator | Custom LLM-as-a-Judge or code-based evaluation |
-| Online Eval Config | Continuous evaluation pipeline for deployed agents |
-| Policy | Cedar authorization policies for gateway tools |
+Invoke the deployed agent:
 
-### Agent Types
+```bash
+agentcore invoke "What is the return policy?"
+```
 
-- **Template agents**: Created from framework templates (Strands, LangChain/LangGraph, GoogleADK, OpenAI Agents, Autogen)
-- **BYO agents**: Bring your own code with `agentcore add agent --type byo`
-- **Import agents**: Import existing Bedrock agents with `agentcore import`
+You can also invoke a specific runtime:
 
-### Build Types
+```bash
+agentcore invoke --runtime CustomerSupport "How can I troubleshoot my device?"
+```
 
-- **CodeZip**: Python source packaged as a zip and deployed directly to AgentCore Runtime
-- **Container**: Docker image built via CodeBuild (ARM64), pushed to ECR, and deployed to AgentCore Runtime
+The AgentCore CLI supports direct invocation and streaming responses from deployed agents.
 
-## Documentation
+## 📊 Observability
 
-- [AgentCore CLI](https://github.com/aws/agentcore-cli)
-- [AgentCore CDK Constructs](https://github.com/aws/agentcore-l3-cdk-constructs)
-- [Amazon Bedrock AgentCore](https://aws.amazon.com/bedrock/agentcore/)
+For troubleshooting and operational visibility, AgentCore provides runtime logs and traces that can be inspected through the AWS environment and AgentCore tooling.
+
+Useful commands include:
+
+```bash
+agentcore logs
+```
+
+and:
+
+```bash
+agentcore traces
+```
+
+This provides a foundation for investigating agent behavior, tool execution, and runtime issues.
+
+## 🔄 Agent Execution Flow
+
+A typical request follows this flow:
+
+```text
+1. User submits a question
+           │
+           ▼
+2. Agent receives the request
+           │
+           ▼
+3. Foundation model understands intent
+           │
+           ▼
+4. Agent determines required capability
+           │
+           ├───────────────┐
+           │               │
+           ▼               ▼
+     Product Tool    Return Policy Tool
+           │               │
+           └───────┬───────┘
+                   │
+                   ▼
+             Web Search
+                   │
+                   ▼
+5. Tool result returned
+           │
+           ▼
+6. Foundation model generates response
+           │
+           ▼
+7. Customer receives answer
+```
+
+## 🎯 Engineering Goals
+
+This project focuses on demonstrating the following engineering concepts:
+
+* Building tool-enabled AI agents
+* Integrating foundation models with application logic
+* Using Amazon Bedrock for generative AI
+* Deploying Python agents to AWS
+* Separating agent reasoning from business capabilities
+* Designing extensible tool interfaces
+* Running agents locally before cloud deployment
+* Using managed AWS infrastructure for agent runtime execution
+
+## 🔮 Future Enhancements
+
+Potential extensions include:
+
+* Persistent conversational memory
+* Product catalog integration
+* Customer authentication
+* Order-status lookup
+* CRM integration
+* Knowledge-base / RAG integration
+* Human-agent escalation
+* Structured tool responses
+* Agent evaluation and automated testing
+* CloudWatch-based monitoring
+* Multi-agent orchestration
+* Additional enterprise support tools
+
+## 👨‍💻 Author
+
+**Rakesh Bhandarkar**
+
+Senior .NET / AI Engineer | Technical Lead
+
+GitHub: [@rakesh-codex](https://github.com/rakesh-codex)
+
+---
+
+## 📚 References
+
+* [Amazon Bedrock AgentCore Documentation](https://docs.aws.amazon.com/bedrock-agentcore/)
+* [AgentCore CLI Documentation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html)
+* [AWS AgentCore CLI](https://github.com/aws/agentcore-cli)
+
+---
+
+⭐ If you find this project useful, consider giving the repository a star.

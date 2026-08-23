@@ -2,9 +2,9 @@
 
 An AI-powered customer support agent built with **Python, Amazon Bedrock, and Amazon Bedrock AgentCore**.
 
-The agent is designed to handle common customer-support scenarios by combining a foundation model with purpose-built tools. It can answer product-related questions, retrieve return-policy information, and assist with troubleshooting by searching external sources.
+The agent combines a foundation model with purpose-built tools and managed agent capabilities to handle common customer-support scenarios. It can answer product-related questions, retrieve return-policy information, assist with troubleshooting, and maintain relevant customer context using **Amazon Bedrock AgentCore Memory**.
 
-The project demonstrates a practical approach to building, testing, and deploying an AI agent on AWS using a code-based Python architecture.
+The project demonstrates a practical approach to building, testing, and deploying a **tool-enabled, context-aware AI agent on AWS** using a code-based Python architecture.
 
 ## 🚀 Overview
 
@@ -15,46 +15,56 @@ This project implements a customer-support AI agent capable of:
 * Assisting customers with troubleshooting
 * Using external web information when additional context is required
 * Selecting the appropriate tool based on the user's request
+* Maintaining relevant customer context with AgentCore Memory
+* Supporting context across customer interactions
 * Running locally during development
 * Deploying the agent to Amazon Bedrock AgentCore Runtime
 * Invoking the deployed agent through the AgentCore CLI
 
-The architecture follows an **agent + tools** approach rather than implementing all business logic directly inside the application.
+The architecture follows an **agent + tools + memory** approach rather than implementing all business logic directly inside the application.
 
 ## 🏗️ Architecture
 
 ```text
-                    ┌──────────────────────┐
-                    │      User / Client   │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │   Customer Support   │
-                    │        Agent         │
-                    │       (Python)       │
-                    └──────────┬───────────┘
-                               │
-                    ┌──────────┴──────────┐
-                    │                     │
-                    ▼                     ▼
-          ┌──────────────────┐   ┌──────────────────┐
-          │ Amazon Bedrock   │   │     Agent Tools  │
-          │ Foundation Model │   │                  │
-          └──────────────────┘   └────────┬─────────┘
-                                          │
-                         ┌────────────────┼────────────────┐
-                         │                │                │
-                         ▼                ▼                ▼
-                  Product Lookup    Return Policy    Web Search
-                         │                │                │
-                         └────────────────┴────────────────┘
-                                          │
-                                          ▼
-                               ┌──────────────────────┐
-                               │ Amazon Bedrock       │
-                               │ AgentCore Runtime    │
-                               └──────────────────────┘
+                         ┌──────────────────────┐
+                         │      User / Client   │
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │   Customer Support   │
+                         │        Agent         │
+                         │       (Python)       │
+                         └──────────┬───────────┘
+                                    │
+                ┌───────────────────┼───────────────────┐
+                │                   │                   │
+                ▼                   ▼                   ▼
+       ┌────────────────┐  ┌────────────────┐  ┌────────────────┐
+       │ Product Lookup │  │ Return Policy  │  │  Web Search    │
+       └────────────────┘  └────────────────┘  └────────────────┘
+                │                   │                   │
+                └───────────────────┼───────────────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │   Amazon Bedrock     │
+                         │   Foundation Model   │
+                         └──────────┬───────────┘
+                                    │
+                         ┌──────────▼───────────┐
+                         │  AgentCore Memory    │
+                         │                      │
+                         │ • Conversation       │
+                         │ • Customer Context   │
+                         │ • Preferences        │
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │ AgentCore Runtime    │
+                         │      AWS Cloud       │
+                         └──────────────────────┘
 ```
 
 ## ✨ Key Capabilities
@@ -101,9 +111,56 @@ Agent:
 I'll look for troubleshooting information related to this issue...
 ```
 
+### 🧠 AgentCore Memory
+
+The agent uses **Amazon Bedrock AgentCore Memory** to maintain relevant context beyond an individual request.
+
+This allows the customer-support agent to move from a stateless question-and-answer experience toward a more **context-aware and personalized support experience**.
+
+Memory can be used to:
+
+* Maintain context during customer interactions
+* Retrieve relevant information from previous interactions
+* Preserve useful customer preferences and context
+* Provide more personalized responses
+* Support continuity across sessions
+* Separate conversational memory from the agent's core business logic
+
+The memory capability is managed through **Amazon Bedrock AgentCore**, avoiding the need to build and maintain a custom persistence layer for agent memory.
+
+### Memory Flow
+
+```text
+Customer Request
+       │
+       ▼
+Customer Support Agent
+       │
+       ▼
+Retrieve Relevant Memory
+       │
+       ▼
+Understand Current Request
+       │
+       ├───────────────┬────────────────┐
+       ▼               ▼                ▼
+ Product Tool    Return Policy     Web Search
+       │               │                │
+       └───────────────┴────────────────┘
+                       │
+                       ▼
+                Generate Response
+                       │
+                       ▼
+              Store Relevant Context
+                       │
+                       ▼
+                AgentCore Memory
+```
+
 ## 🧠 Agent Design
 
-The application follows a tool-enabled agent architecture.
+The application follows a **tool-enabled agent architecture**.
 
 Instead of implementing a large number of conditional statements such as:
 
@@ -118,18 +175,21 @@ elif question == troubleshooting:
 
 the agent uses the foundation model to understand the user's intent and determine which capability should be used.
 
-This makes the architecture easier to extend with additional tools and business capabilities.
+AgentCore Memory extends this architecture by allowing the agent to retrieve and persist relevant customer context.
+
+This makes the architecture easier to extend with additional tools, memory strategies, and business capabilities.
 
 ## ☁️ AWS Services
 
 The project uses the following AWS technologies:
 
-| Service                      | Purpose                           |
-| ---------------------------- | --------------------------------- |
-| **Amazon Bedrock**           | Foundation model for the AI agent |
-| **Amazon Bedrock AgentCore** | Runtime and agent deployment      |
-| **AWS IAM**                  | Authentication and authorization  |
-| **AWS Cloud infrastructure** | Hosting and runtime execution     |
+| Service                      | Purpose                                      |
+| ---------------------------- | -------------------------------------------- |
+| **Amazon Bedrock**           | Foundation model for the AI agent            |
+| **Amazon Bedrock AgentCore** | Agent runtime and managed agent capabilities |
+| **AgentCore Memory**         | Persistent agent and customer context        |
+| **AWS IAM**                  | Authentication and authorization             |
+| **AWS Cloud infrastructure** | Hosting and runtime execution                |
 
 The AgentCore CLI provides commands for creating projects, running agents locally, deploying them to AWS, checking status, and invoking deployed agents.
 
@@ -138,6 +198,7 @@ The AgentCore CLI provides commands for creating projects, running agents locall
 * **Python**
 * **Amazon Bedrock**
 * **Amazon Bedrock AgentCore**
+* **AgentCore Memory**
 * **Strands Agents**
 * **AWS SDK / Boto3**
 * **AWS IAM**
@@ -177,8 +238,6 @@ Before running the project, make sure you have:
 * Required IAM permissions
 * Access to the selected Amazon Bedrock foundation model
 
-AWS's current AgentCore documentation lists Python 3.10+ and Node.js 20+ among the prerequisites for the CLI-based Python agent workflow.
-
 ## 🔐 AWS Configuration
 
 Configure your AWS credentials using the AWS CLI:
@@ -209,8 +268,6 @@ Verify the installation:
 agentcore --help
 ```
 
-The current AWS AgentCore CLI is distributed through npm and provides commands for creating, developing, deploying, and invoking agents.
-
 ## ▶️ Run Locally
 
 Navigate to the project directory:
@@ -226,8 +283,6 @@ agentcore dev
 ```
 
 This starts the local AgentCore development environment and allows the agent to be tested before deploying it to AWS.
-
-You can then interact with the agent using the available development interface.
 
 ## 🚀 Deploy to AWS
 
@@ -263,8 +318,6 @@ You can also invoke a specific runtime:
 agentcore invoke --runtime CustomerSupport "How can I troubleshoot my device?"
 ```
 
-The AgentCore CLI supports direct invocation and streaming responses from deployed agents.
-
 ## 📊 Observability
 
 For troubleshooting and operational visibility, AgentCore provides runtime logs and traces that can be inspected through the AWS environment and AgentCore tooling.
@@ -281,7 +334,7 @@ and:
 agentcore traces
 ```
 
-This provides a foundation for investigating agent behavior, tool execution, and runtime issues.
+This provides a foundation for investigating agent behavior, tool execution, memory interactions, and runtime issues.
 
 ## 🔄 Agent Execution Flow
 
@@ -294,29 +347,32 @@ A typical request follows this flow:
 2. Agent receives the request
            │
            ▼
-3. Foundation model understands intent
+3. Retrieve relevant memory
            │
            ▼
-4. Agent determines required capability
-           │
-           ├───────────────┐
-           │               │
-           ▼               ▼
-     Product Tool    Return Policy Tool
-           │               │
-           └───────┬───────┘
-                   │
-                   ▼
-             Web Search
-                   │
-                   ▼
-5. Tool result returned
+4. Foundation model understands intent
            │
            ▼
-6. Foundation model generates response
+5. Agent determines required capability
+           │
+           ├───────────────┬────────────────┐
+           │               │                │
+           ▼               ▼                ▼
+     Product Tool    Return Policy     Web Search
+           │               │                │
+           └───────────────┴────────────────┘
+                           │
+                           ▼
+6. Tool result returned
            │
            ▼
-7. Customer receives answer
+7. Foundation model generates response
+           │
+           ▼
+8. Relevant context is persisted
+           │
+           ▼
+9. Customer receives response
 ```
 
 ## 🎯 Engineering Goals
@@ -326,17 +382,45 @@ This project focuses on demonstrating the following engineering concepts:
 * Building tool-enabled AI agents
 * Integrating foundation models with application logic
 * Using Amazon Bedrock for generative AI
+* Implementing managed agent memory
+* Building context-aware AI experiences
 * Deploying Python agents to AWS
 * Separating agent reasoning from business capabilities
 * Designing extensible tool interfaces
 * Running agents locally before cloud deployment
 * Using managed AWS infrastructure for agent runtime execution
+* Designing AI applications that can evolve toward production workloads
+
+## 📈 Project Evolution
+
+The project is being developed incrementally toward a production-oriented AI agent architecture.
+
+```text
+Customer Support Agent
+        │
+        ▼
+Amazon Bedrock Integration
+        │
+        ▼
+AgentCore Runtime
+        │
+        ▼
+AgentCore Memory
+        │
+        ▼
+Context-Aware Support Agent
+        │
+        ▼
+Tool-Enabled AI Assistant
+        │
+        ▼
+Production-Oriented Agent Architecture
+```
 
 ## 🔮 Future Enhancements
 
 Potential extensions include:
 
-* Persistent conversational memory
 * Product catalog integration
 * Customer authentication
 * Order-status lookup
@@ -346,8 +430,9 @@ Potential extensions include:
 * Structured tool responses
 * Agent evaluation and automated testing
 * CloudWatch-based monitoring
-* Multi-agent orchestration
+* Agent identity and authorization
 * Additional enterprise support tools
+* Multi-agent orchestration
 
 ## 👨‍💻 Author
 
@@ -362,7 +447,8 @@ GitHub: [@rakesh-codex](https://github.com/rakesh-codex)
 ## 📚 References
 
 * [Amazon Bedrock AgentCore Documentation](https://docs.aws.amazon.com/bedrock-agentcore/)
-* [AgentCore CLI Documentation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html)
+* [AgentCore Runtime Documentation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html)
+* [AgentCore Memory Documentation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-get-started.html)
 * [AWS AgentCore CLI](https://github.com/aws/agentcore-cli)
 
 ---

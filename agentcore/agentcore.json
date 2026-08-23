@@ -53,7 +53,17 @@
     }
   ],
   "knowledgeBases": [],
-  "credentials": [],
+  "credentials": [
+    {
+      "authorizerType": "OAuthCredentialProvider",
+      "name": "gateway-egress-oauth",
+      "discoveryUrl": "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_pLbnmLAri/.well-known/openid-configuration",
+      "scopes": [
+        "default-m2m-resource-server-1170d700/read"
+      ],
+      "vendor": "CustomOauth2"
+    }
+  ],
   "evaluators": [],
   "onlineEvalConfigs": [
     {
@@ -145,7 +155,20 @@
   ],
   "configBundles": [],
   "abTests": [],
-  "harnesses": [],
+  "harnesses": [
+    {
+      "name": "OrderResearchAgent",
+      "path": "app/OrderResearchAgent"
+    },
+    {
+      "name": "PersistentReportAgent",
+      "path": "app/PersistentReportAgent"
+    },
+    {
+      "name": "ContainerAgent",
+      "path": "app/ContainerAgent"
+    }
+  ],
   "datasets": [],
   "payments": []
 }

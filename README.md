@@ -1,91 +1,126 @@
 # AWS Bedrock Customer Support Agent
 
-An AI-powered customer support agent built with **Python, Amazon Bedrock, and Amazon Bedrock AgentCore**.
+An enterprise-oriented AI customer support platform built with **Python, Amazon Bedrock, and Amazon Bedrock AgentCore**.
 
-The agent combines a foundation model with purpose-built tools and managed agent capabilities to handle common customer-support scenarios. It can answer product-related questions, retrieve return-policy information, assist with troubleshooting, and maintain relevant customer context using **Amazon Bedrock AgentCore Memory**.
+The project demonstrates how to build, deploy, secure, evaluate, and continuously improve an AI agent using AWS managed agent capabilities.
 
-The project demonstrates a practical approach to building, testing, and deploying a **tool-enabled, context-aware AI agent on AWS** using a code-based Python architecture.
+The customer support agent combines **foundation model reasoning, tools, persistent memory, MCP-based integrations, authorization policies, safety guardrails, evaluation, managed orchestration, frontend interaction, and controlled A/B experimentation**.
+
+The goal is to demonstrate a complete **agent engineering lifecycle**, from local development through production-oriented deployment, governance, evaluation, and optimization.
+
+---
 
 ## 🚀 Overview
 
-This project implements a customer-support AI agent capable of:
+The customer support agent can:
 
-* Answering product-related questions
-* Retrieving and explaining return policies
-* Assisting customers with troubleshooting
-* Using external web information when additional context is required
-* Selecting the appropriate tool based on the user's request
-* Maintaining relevant customer context with AgentCore Memory
-* Supporting context across customer interactions
-* Running locally during development
-* Deploying the agent to Amazon Bedrock AgentCore Runtime
-* Invoking the deployed agent through the AgentCore CLI
+* Answer product-related questions
+* Retrieve and explain return policies
+* Assist with troubleshooting
+* Invoke tools based on user intent
+* Access external capabilities through AgentCore Gateway
+* Discover and invoke MCP tools
+* Maintain relevant customer context using AgentCore Memory
+* Run inside Amazon Bedrock AgentCore Runtime
+* Apply policy-based authorization to tool access
+* Apply Bedrock Guardrails for safety and sensitive information protection
+* Evaluate agent quality and behavior
+* Run through a user-facing frontend
+* Use AgentCore Harness for managed agent orchestration
+* Generate optimization recommendations
+* Run controlled A/B experiments
+* Compare agent variants using online evaluations and statistical significance
 
-The architecture follows an **agent + tools + memory** approach rather than implementing all business logic directly inside the application.
+The architecture follows an:
 
-## 🏗️ Architecture
+**Agent + Tools + Memory + Gateway + Governance + Evaluation + Optimization**
 
-```text
-                         ┌──────────────────────┐
-                         │      User / Client   │
-                         └──────────┬───────────┘
-                                    │
-                                    ▼
-                         ┌──────────────────────┐
-                         │   Customer Support   │
-                         │        Agent         │
-                         │       (Python)       │
-                         └──────────┬───────────┘
-                                    │
-                ┌───────────────────┼───────────────────┐
-                │                   │                   │
-                ▼                   ▼                   ▼
-       ┌────────────────┐  ┌────────────────┐  ┌────────────────┐
-       │ Product Lookup │  │ Return Policy  │  │  Web Search    │
-       └────────────────┘  └────────────────┘  └────────────────┘
-                │                   │                   │
-                └───────────────────┼───────────────────┘
-                                    │
-                                    ▼
-                         ┌──────────────────────┐
-                         │   Amazon Bedrock     │
-                         │   Foundation Model   │
-                         └──────────┬───────────┘
-                                    │
-                         ┌──────────▼───────────┐
-                         │  AgentCore Memory    │
-                         │                      │
-                         │ • Conversation       │
-                         │ • Customer Context   │
-                         │ • Preferences        │
-                         └──────────┬───────────┘
-                                    │
-                                    ▼
-                         ┌──────────────────────┐
-                         │ AgentCore Runtime    │
-                         │      AWS Cloud       │
-                         └──────────────────────┘
-```
+model.
 
-## ✨ Key Capabilities
+---
 
-### Product Support
-
-The agent can understand customer questions about products and provide relevant information using the available product-support tools.
-
-Example:
+# 🏗️ High-Level Architecture
 
 ```text
-User:
-What is the warranty period for this product?
-
-Agent:
-The product is covered by the standard warranty policy...
+                              ┌──────────────────────┐
+                              │       Customer       │
+                              │     Web Frontend     │
+                              └──────────┬───────────┘
+                                         │
+                                         ▼
+                              ┌──────────────────────┐
+                              │  Customer Support    │
+                              │       Agent          │
+                              │       Python         │
+                              └──────────┬───────────┘
+                                         │
+                     ┌───────────────────┼───────────────────┐
+                     │                   │                   │
+                     ▼                   ▼                   ▼
+              Product Tools       Return Policy       Gateway / MCP
+                                                           │
+                                                           ▼
+                                                  ┌──────────────────┐
+                                                  │ AgentCore        │
+                                                  │ Gateway          │
+                                                  └────────┬─────────┘
+                                                           │
+                                      ┌────────────────────┼────────────────────┐
+                                      │                    │                    │
+                                      ▼                    ▼                    ▼
+                                  MCP Tools              APIs              External
+                                                                            Services
+                                                          
+                                         │
+                                         ▼
+                              ┌──────────────────────┐
+                              │   Amazon Bedrock     │
+                              │   Foundation Model   │
+                              └──────────┬───────────┘
+                                         │
+                              ┌──────────▼───────────┐
+                              │   AgentCore Memory   │
+                              │                      │
+                              │ • Session Context   │
+                              │ • Customer Context  │
+                              │ • Preferences       │
+                              └──────────┬───────────┘
+                                         │
+                                         ▼
+                              ┌──────────────────────┐
+                              │ AgentCore Runtime    │
+                              │      AWS Cloud       │
+                              └──────────┬───────────┘
+                                         │
+                    ┌────────────────────┼────────────────────┐
+                    │                    │                    │
+                    ▼                    ▼                    ▼
+             AgentCore Policy      Guardrails          Observability
+                    │                    │                    │
+                    └────────────────────┼────────────────────┘
+                                         │
+                                         ▼
+                              ┌──────────────────────┐
+                              │ AgentCore Evaluations│
+                              └──────────┬───────────┘
+                                         │
+                                         ▼
+                              ┌──────────────────────┐
+                              │ AgentCore            │
+                              │ Optimization         │
+                              └──────────┬───────────┘
+                                         │
+                                         ▼
+                                  A/B Experiments
 ```
 
-### Return Policy
+---
 
-The agent can retrieve return-policy information and explain the applicable policy to customers in natural language.
+# ✨ Core Capabilities
+
+## 1. Customer Support Agent
+
+The core agent uses a foundation model to understand customer intent and determine which capability should be used to answer a request.
 
 Example:
 
@@ -94,39 +129,47 @@ User:
 Can I return my product after 20 days?
 
 Agent:
-According to the current return policy...
+I'll check the applicable return policy...
 ```
+
+The agent can reason about the request rather than relying on a large collection of hard-coded conditional statements.
+
+---
+
+# 🔧 Tool-Enabled Agent
+
+The agent can use purpose-built capabilities for different customer-support scenarios.
+
+### Product Support
+
+Answers product-related questions using the available product-support capabilities.
+
+### Return Policy
+
+Retrieves and explains applicable return-policy information.
 
 ### Troubleshooting
 
-When the available product information is not sufficient, the agent can use web-search capabilities to find relevant troubleshooting information.
+Uses available tools and external information to help customers troubleshoot problems.
 
-Example:
+The architecture keeps business capabilities separate from the agent's reasoning layer, making additional tools easier to introduce.
 
-```text
-User:
-My device keeps disconnecting from Wi-Fi. How can I fix it?
+---
 
-Agent:
-I'll look for troubleshooting information related to this issue...
-```
+# 🧠 AgentCore Memory
 
-### 🧠 AgentCore Memory
+The agent uses **Amazon Bedrock AgentCore Memory** to maintain relevant customer context across interactions.
 
-The agent uses **Amazon Bedrock AgentCore Memory** to maintain relevant context beyond an individual request.
+This allows the system to move from a stateless chatbot toward a **context-aware customer-support assistant**.
 
-This allows the customer-support agent to move from a stateless question-and-answer experience toward a more **context-aware and personalized support experience**.
+Memory can be used for:
 
-Memory can be used to:
-
-* Maintain context during customer interactions
-* Retrieve relevant information from previous interactions
-* Preserve useful customer preferences and context
-* Provide more personalized responses
-* Support continuity across sessions
-* Separate conversational memory from the agent's core business logic
-
-The memory capability is managed through **Amazon Bedrock AgentCore**, avoiding the need to build and maintain a custom persistence layer for agent memory.
+* Conversation context
+* Previous customer interactions
+* Customer preferences
+* Long-term contextual information
+* Personalized responses
+* Cross-session continuity
 
 ### Memory Flow
 
@@ -134,177 +177,150 @@ The memory capability is managed through **Amazon Bedrock AgentCore**, avoiding 
 Customer Request
        │
        ▼
-Customer Support Agent
-       │
-       ▼
 Retrieve Relevant Memory
        │
        ▼
-Understand Current Request
+Agent Reasoning
        │
-       ├───────────────┬────────────────┐
-       ▼               ▼                ▼
- Product Tool    Return Policy     Web Search
-       │               │                │
-       └───────────────┴────────────────┘
-                       │
-                       ▼
-                Generate Response
-                       │
-                       ▼
-              Store Relevant Context
-                       │
-                       ▼
-                AgentCore Memory
+       ▼
+Tool Execution
+       │
+       ▼
+Generate Response
+       │
+       ▼
+Persist Relevant Context
+       │
+       ▼
+AgentCore Memory
 ```
 
-## 🧠 Agent Design
+---
 
-The application follows a **tool-enabled agent architecture**.
+# 🔌 AgentCore Gateway
 
-Instead of implementing a large number of conditional statements such as:
+**Amazon Bedrock AgentCore Gateway** provides a centralized connectivity layer between the agent and external tools.
+
+Instead of coupling the agent directly to every external integration, capabilities can be exposed through Gateway.
+
+Gateway supports MCP-based tool discovery and invocation and provides a common interface for accessing external capabilities.
 
 ```text
-if question == product:
-    ...
-elif question == return_policy:
-    ...
-elif question == troubleshooting:
-    ...
+                     Customer Support Agent
+                              │
+                              │ MCP
+                              ▼
+                    ┌────────────────────┐
+                    │  AgentCore Gateway │
+                    └─────────┬──────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              │               │               │
+              ▼               ▼               ▼
+          MCP Tools          APIs          Services
 ```
 
-the agent uses the foundation model to understand the user's intent and determine which capability should be used.
+This architecture provides:
 
-AgentCore Memory extends this architecture by allowing the agent to retrieve and persist relevant customer context.
+* Centralized tool connectivity
+* Tool discovery
+* MCP-based integration
+* Separation between agent logic and external systems
+* A foundation for centralized authorization
+* Easier addition of new integrations
 
-This makes the architecture easier to extend with additional tools, memory strategies, and business capabilities.
+---
 
-## ☁️ AWS Services
+# 🔐 AgentCore Policy
 
-The project uses the following AWS technologies:
+The project uses **AgentCore Policy** to provide fine-grained authorization around agent and tool interactions.
 
-| Service                      | Purpose                                      |
-| ---------------------------- | -------------------------------------------- |
-| **Amazon Bedrock**           | Foundation model for the AI agent            |
-| **Amazon Bedrock AgentCore** | Agent runtime and managed agent capabilities |
-| **AgentCore Memory**         | Persistent agent and customer context        |
-| **AWS IAM**                  | Authentication and authorization             |
-| **AWS Cloud infrastructure** | Hosting and runtime execution                |
+Policies can determine:
 
-The AgentCore CLI provides commands for creating projects, running agents locally, deploying them to AWS, checking status, and invoking deployed agents.
+* Who can access a tool
+* Which action can be performed
+* Which Gateway resource can be accessed
+* Under which conditions an operation is allowed
 
-## 🛠️ Technology Stack
-
-* **Python**
-* **Amazon Bedrock**
-* **Amazon Bedrock AgentCore**
-* **AgentCore Memory**
-* **Strands Agents**
-* **AWS SDK / Boto3**
-* **AWS IAM**
-* **AgentCore CLI**
-
-## 📁 Project Structure
+Policy enforcement provides a deterministic authorization layer outside the agent's reasoning.
 
 ```text
-aws-bedrock-customer-support-agent/
-│
-├── agentcore/
-│   ├── agentcore.json
-│   └── aws-targets.json
-│
-├── app/
-│   └── CustomerSupport/
-│       ├── main.py
-│       └── pyproject.toml
-│
-├── .gitignore
-├── README.md
-└── ...
+Agent
+  │
+  ▼
+AgentCore Gateway
+  │
+  ▼
+Policy Evaluation
+  │
+  ├── ALLOW
+  │
+  └── DENY
+  │
+  ▼
+Tool Execution
 ```
 
-The AgentCore project structure separates agent configuration from the Python application code and AWS deployment targets.
+AgentCore Gateway policies use Cedar-based authorization to govern tool calls and access conditions.
 
-## ⚙️ Prerequisites
+---
 
-Before running the project, make sure you have:
+# 🛡️ Bedrock Guardrails
 
-* Python 3.10+
-* Node.js 20+
-* npm
-* AWS CLI
-* An AWS account
-* AWS credentials configured locally
-* Required IAM permissions
-* Access to the selected Amazon Bedrock foundation model
+The project also integrates **Amazon Bedrock Guardrails** with the policy layer to add safety controls around agent interactions.
 
-## 🔐 AWS Configuration
+Guardrails can evaluate requests and responses for areas such as:
 
-Configure your AWS credentials using the AWS CLI:
+* Prompt injection
+* Jailbreak attempts
+* Harmful content
+* Sensitive information
+* Credentials and secrets
+* Other configured safety categories
 
-```bash
-aws configure
+This creates a layered security architecture:
+
+```text
+User Request
+     │
+     ▼
+Agent
+     │
+     ▼
+Gateway
+     │
+     ▼
+Policy + Guardrails
+     │
+     ├── Allowed
+     │
+     └── Denied
+     │
+     ▼
+Tool / External System
 ```
 
-Verify that the credentials are available:
+AWS documents Guardrails integration with AgentCore Policy for prompt attacks, content filtering, and sensitive information detection.
 
-```bash
-aws sts get-caller-identity
-```
+---
 
-Make sure the AWS identity being used has the permissions required to access Amazon Bedrock and deploy resources through AgentCore.
+# 🚀 AgentCore Runtime
 
-## 📦 Install AgentCore CLI
+The agent is deployed to **Amazon Bedrock AgentCore Runtime** for managed cloud execution.
 
-Install the AgentCore CLI:
+The runtime provides the production execution environment for the agent without requiring the application to manage its own agent hosting infrastructure.
 
-```bash
-npm install -g @aws/agentcore
-```
-
-Verify the installation:
-
-```bash
-agentcore --help
-```
-
-## ▶️ Run Locally
-
-Navigate to the project directory:
-
-```bash
-cd aws-bedrock-customer-support-agent
-```
-
-Start the local development environment:
-
-```bash
-agentcore dev
-```
-
-This starts the local AgentCore development environment and allows the agent to be tested before deploying it to AWS.
-
-## 🚀 Deploy to AWS
-
-Deploy the agent to Amazon Bedrock AgentCore Runtime:
+Typical deployment flow:
 
 ```bash
 agentcore deploy
 ```
 
-The deployment process packages the application and provisions the required AWS infrastructure for the AgentCore Runtime.
-
-## 🔎 Check Deployment Status
-
-After deployment:
+Check deployment:
 
 ```bash
 agentcore status
 ```
-
-This can be used to inspect the deployed AgentCore resources.
-
-## 💬 Invoke the Agent
 
 Invoke the deployed agent:
 
@@ -312,129 +328,655 @@ Invoke the deployed agent:
 agentcore invoke "What is the return policy?"
 ```
 
-You can also invoke a specific runtime:
+---
 
-```bash
-agentcore invoke --runtime CustomerSupport "How can I troubleshoot my device?"
-```
+# 📊 AgentCore Evaluations
 
-## 📊 Observability
+The project uses **Amazon Bedrock AgentCore Evaluations** to measure agent performance.
 
-For troubleshooting and operational visibility, AgentCore provides runtime logs and traces that can be inspected through the AWS environment and AgentCore tooling.
+Evaluation can be used to assess:
 
-Useful commands include:
+* Helpfulness
+* Correctness
+* Task completion
+* Tool behavior
+* Agent consistency
+* Custom business metrics
 
-```bash
-agentcore logs
-```
+AgentCore Evaluations supports online, on-demand, batch, dataset, and simulation-oriented evaluation workflows.
 
-and:
-
-```bash
-agentcore traces
-```
-
-This provides a foundation for investigating agent behavior, tool execution, memory interactions, and runtime issues.
-
-## 🔄 Agent Execution Flow
-
-A typical request follows this flow:
+### Evaluation Loop
 
 ```text
-1. User submits a question
-           │
-           ▼
-2. Agent receives the request
-           │
-           ▼
-3. Retrieve relevant memory
-           │
-           ▼
-4. Foundation model understands intent
-           │
-           ▼
-5. Agent determines required capability
-           │
-           ├───────────────┬────────────────┐
-           │               │                │
-           ▼               ▼                ▼
-     Product Tool    Return Policy     Web Search
-           │               │                │
-           └───────────────┴────────────────┘
+Agent Execution
+      │
+      ▼
+Telemetry / Traces
+      │
+      ▼
+AgentCore Evaluations
+      │
+      ▼
+Quality Metrics
+      │
+      ▼
+Identify Weaknesses
+      │
+      ▼
+Optimization
+```
+
+---
+
+# 🧩 AgentCore Harness
+
+The project also explores **AgentCore Harness** as a managed orchestration environment for agent execution.
+
+The Harness capability brings together agent execution capabilities such as:
+
+* Model configuration
+* Tools
+* Memory
+* Environment
+* Filesystem
+* Observability
+* Versioning
+* Evaluation
+* Optimization
+
+The managed Harness is powered by Strands Agents and provides a higher-level approach to running and operating production-oriented agents.
+
+Conceptually:
+
+```text
+                 AgentCore Harness
+                        │
+       ┌────────────────┼────────────────┐
+       │                │                │
+       ▼                ▼                ▼
+     Model            Tools           Memory
+       │                │                │
+       └────────────────┼────────────────┘
+                        │
+                        ▼
+                  Agent Execution
+                        │
+       ┌────────────────┼────────────────┐
+       │                │                │
+       ▼                ▼                ▼
+ Observability      Evaluation      Optimization
+```
+
+---
+
+# 🎨 Customer Frontend
+
+A user-facing frontend provides an interface for interacting with the deployed customer-support agent.
+
+The frontend provides the application layer between the customer and the AgentCore-based backend.
+
+```text
+Customer
+   │
+   ▼
+Frontend
+   │
+   ▼
+Agent Runtime
+   │
+   ├── Memory
+   ├── Tools
+   ├── Gateway
+   └── Policies
+   │
+   ▼
+Response
+```
+
+This separates the presentation layer from the agent and AWS infrastructure layers.
+
+---
+
+# 📈 Agent Optimization
+
+The project implements an agent optimization workflow using **AgentCore Optimization**.
+
+Instead of manually changing prompts and assuming the new version is better, the optimization workflow uses real agent traces and evaluation results to identify opportunities for improvement.
+
+AgentCore Optimization provides capabilities including recommendations, configuration bundles, and controlled A/B testing.
+
+### Continuous Improvement Loop
+
+```text
+             Agent Traffic
+                   │
+                   ▼
+              Agent Traces
+                   │
+                   ▼
+             Evaluations
+                   │
+                   ▼
+           Optimization Insights
+                   │
+                   ▼
+          Configuration Change
+                   │
+                   ▼
+              A/B Testing
+                   │
+          ┌────────┴────────┐
+          ▼                 ▼
+       Control          Treatment
+          │                 │
+          └────────┬────────┘
+                   ▼
+          Statistical Results
+                   │
+                   ▼
+             Winning Variant
+                   │
+                   ▼
+             New Baseline
+                   │
+                   └──────► Repeat
+```
+
+---
+
+# 🧪 A/B Testing
+
+The project also includes AgentCore A/B testing capabilities.
+
+A/B testing allows two agent variants to receive controlled traffic so their performance can be compared using online evaluations.
+
+Possible variants include:
+
+* Different system prompts
+* Different model configurations
+* Different tool descriptions
+* Different agent implementations
+* Different configuration bundle versions
+
+AgentCore Gateway handles traffic routing while online evaluations score sessions and the service calculates statistical significance.
+
+### A/B Test Flow
+
+```text
+                    Incoming Traffic
                            │
                            ▼
-6. Tool result returned
-           │
-           ▼
-7. Foundation model generates response
-           │
-           ▼
-8. Relevant context is persisted
-           │
-           ▼
-9. Customer receives response
+                  AgentCore Gateway
+                           │
+                 ┌─────────┴─────────┐
+                 │                   │
+                 ▼                   ▼
+             CONTROL             TREATMENT
+              Agent                 Agent
+                 │                   │
+                 └─────────┬─────────┘
+                           ▼
+                   Online Evaluation
+                           │
+                           ▼
+                  Statistical Analysis
+                           │
+                           ▼
+                    Compare Results
+                           │
+              ┌────────────┴────────────┐
+              ▼                         ▼
+        Keep Control             Promote Treatment
 ```
 
-## 🎯 Engineering Goals
+AWS's A/B testing workflow uses Gateway traffic splitting and online evaluations to compare variants and determine whether observed differences are statistically significant.
 
-This project focuses on demonstrating the following engineering concepts:
+---
 
-* Building tool-enabled AI agents
-* Integrating foundation models with application logic
-* Using Amazon Bedrock for generative AI
-* Implementing managed agent memory
-* Building context-aware AI experiences
-* Deploying Python agents to AWS
-* Separating agent reasoning from business capabilities
-* Designing extensible tool interfaces
-* Running agents locally before cloud deployment
-* Using managed AWS infrastructure for agent runtime execution
-* Designing AI applications that can evolve toward production workloads
+# 🔄 Complete Agent Lifecycle
 
-## 📈 Project Evolution
-
-The project is being developed incrementally toward a production-oriented AI agent architecture.
+The project demonstrates the following end-to-end lifecycle:
 
 ```text
-Customer Support Agent
-        │
-        ▼
-Amazon Bedrock Integration
-        │
-        ▼
-AgentCore Runtime
-        │
-        ▼
-AgentCore Memory
-        │
-        ▼
-Context-Aware Support Agent
-        │
-        ▼
-Tool-Enabled AI Assistant
-        │
-        ▼
-Production-Oriented Agent Architecture
+1. Build
+   │
+   ▼
+2. Local Development
+   │
+   ▼
+3. Bedrock Integration
+   │
+   ▼
+4. AgentCore Runtime
+   │
+   ▼
+5. Memory
+   │
+   ▼
+6. Gateway + MCP Tools
+   │
+   ▼
+7. Policy + Guardrails
+   │
+   ▼
+8. Deployment
+   │
+   ▼
+9. Frontend
+   │
+   ▼
+10. Evaluations
+    │
+    ▼
+11. Harness
+    │
+    ▼
+12. Optimization
+    │
+    ▼
+13. A/B Testing
+    │
+    ▼
+14. Promote Winning Configuration
+    │
+    └──────────────► Continuous Improvement
 ```
 
-## 🔮 Future Enhancements
+---
 
-Potential extensions include:
+# 🏛️ Production-Oriented Architecture
 
-* Product catalog integration
-* Customer authentication
-* Order-status lookup
-* CRM integration
-* Knowledge-base / RAG integration
+The overall architecture can be viewed as several independent layers:
+
+```text
+┌─────────────────────────────────────────────────────┐
+│                    PRESENTATION                     │
+│                                                     │
+│                 Customer Frontend                   │
+└──────────────────────────┬──────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────┐
+│                     AGENT                           │
+│                                                     │
+│          Python / Strands / Bedrock                 │
+└──────────────────────────┬──────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────┐
+│                  CAPABILITIES                       │
+│                                                     │
+│        Tools / Memory / Gateway / MCP               │
+└──────────────────────────┬──────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────┐
+│                 GOVERNANCE                          │
+│                                                     │
+│       IAM / AgentCore Policy / Guardrails            │
+└──────────────────────────┬──────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────┐
+│                  RUNTIME                            │
+│                                                     │
+│              AgentCore Runtime                     │
+└──────────────────────────┬──────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────┐
+│              QUALITY & OPERATIONS                   │
+│                                                     │
+│ Evaluations / Observability / Harness / Optimization│
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+# ☁️ AWS Services & Capabilities
+
+| AWS Capability                | Purpose                                   |
+| ----------------------------- | ----------------------------------------- |
+| **Amazon Bedrock**            | Foundation model access                   |
+| **AgentCore Runtime**         | Managed agent execution                   |
+| **AgentCore Memory**          | Persistent contextual memory              |
+| **AgentCore Gateway**         | External tool and MCP connectivity        |
+| **AgentCore Policy**          | Fine-grained authorization                |
+| **Amazon Bedrock Guardrails** | Safety and sensitive-information controls |
+| **AgentCore Evaluations**     | Agent quality measurement                 |
+| **AgentCore Harness**         | Managed agent orchestration               |
+| **AgentCore Optimization**    | Data-driven agent improvement             |
+| **AgentCore A/B Testing**     | Controlled variant experimentation        |
+| **AWS IAM**                   | Identity and access management            |
+| **CloudWatch / telemetry**    | Runtime observability                     |
+
+---
+
+# 🛠️ Technology Stack
+
+### AI / Agent
+
+* Python
+* Amazon Bedrock
+* Strands Agents
+* Amazon Bedrock AgentCore
+* Model Context Protocol (MCP)
+
+### AgentCore Capabilities
+
+* AgentCore Runtime
+* AgentCore Memory
+* AgentCore Gateway
+* AgentCore Policy
+* AgentCore Harness
+* AgentCore Evaluations
+* AgentCore Optimization
+* AgentCore A/B Testing
+
+### Security
+
+* AWS IAM
+* Cedar-based authorization policies
+* Amazon Bedrock Guardrails
+
+### Infrastructure / Operations
+
+* AWS Cloud infrastructure
+* CloudWatch
+* AgentCore CLI
+* OpenTelemetry-based observability
+
+---
+
+# 📁 Project Structure
+
+The exact structure may evolve as additional AgentCore capabilities are added.
+
+```text
+aws-bedrock-customer-support-agent/
+│
+├── agentcore/
+│   ├── agentcore.json
+│   ├── aws-targets.json
+│   └── ...
+│
+├── app/
+│   └── CustomerSupport/
+│       ├── main.py
+│       ├── pyproject.toml
+│       └── ...
+│
+├── frontend/
+│   └── ...
+│
+├── .gitignore
+├── LICENSE
+└── README.md
+```
+
+The repository separates application code, AgentCore configuration, frontend components, and deployment-related resources.
+
+---
+
+# ⚙️ Prerequisites
+
+Before running the project, make sure you have:
+
+* Python 3.10+
+* Node.js
+* npm
+* AWS CLI
+* AWS account
+* AWS credentials configured
+* Required IAM permissions
+* Access to the selected Amazon Bedrock foundation model
+* AgentCore CLI
+
+---
+
+# 🔐 AWS Configuration
+
+Configure AWS credentials:
+
+```bash
+aws configure
+```
+
+Verify the active identity:
+
+```bash
+aws sts get-caller-identity
+```
+
+The AWS identity must have the required permissions for Amazon Bedrock and the AgentCore resources used by the project.
+
+**Never commit AWS credentials, access keys, secret keys, tokens, or `.env` files to the repository.**
+
+---
+
+# 📦 AgentCore CLI
+
+Install the AgentCore CLI according to the current AWS documentation.
+
+Verify:
+
+```bash
+agentcore --help
+```
+
+Common development commands include:
+
+```bash
+agentcore dev
+agentcore deploy
+agentcore status
+agentcore invoke
+```
+
+---
+
+# ▶️ Local Development
+
+Navigate to the project:
+
+```bash
+cd aws-bedrock-customer-support-agent
+```
+
+Run the local agent:
+
+```bash
+agentcore dev
+```
+
+This allows the agent to be tested locally before deployment.
+
+---
+
+# 🚀 Deployment
+
+Deploy the agent and configured AgentCore resources:
+
+```bash
+agentcore deploy
+```
+
+Check deployment:
+
+```bash
+agentcore status
+```
+
+Invoke the deployed agent:
+
+```bash
+agentcore invoke "What is the return policy?"
+```
+
+---
+
+# 📊 Observability
+
+Observability is an important part of the architecture because evaluation and optimization depend on high-quality agent telemetry.
+
+The project uses AgentCore/AWS observability capabilities to inspect:
+
+* Agent execution
+* Tool calls
+* Runtime behavior
+* Gateway interactions
+* Memory interactions
+* Evaluation data
+* Optimization signals
+
+AgentCore Optimization uses traces and evaluation results as inputs for its continuous improvement workflow.
+
+---
+
+# 🔒 Security Model
+
+Security is implemented in multiple layers:
+
+```text
+                    User
+                      │
+                      ▼
+                  Frontend
+                      │
+                      ▼
+                    Agent
+                      │
+                      ▼
+               AgentCore Gateway
+                      │
+              ┌───────┴────────┐
+              ▼                ▼
+           Policy          Guardrails
+              │                │
+              └───────┬────────┘
+                      ▼
+                Tool / API
+                      │
+                      ▼
+               External System
+```
+
+### Security principles
+
+* Least-privilege IAM
+* Gateway-level authorization
+* Cedar policy enforcement
+* Prompt attack detection
+* Sensitive information detection
+* Content filtering
+* Separation of agent reasoning from authorization decisions
+* No credentials committed to source control
+
+---
+
+# 🎯 Engineering Objectives
+
+This project demonstrates practical experience with:
+
+* Generative AI application development
+* Agentic AI architecture
+* Foundation model integration
+* Tool-enabled agents
+* MCP-based tool integration
+* Persistent agent memory
+* Managed cloud agent runtime
+* Fine-grained authorization
+* AI safety controls
+* Agent evaluation
+* Observability
+* Agent orchestration
+* Configuration management
+* A/B experimentation
+* Statistical evaluation
+* Continuous agent optimization
+* Production-oriented AI engineering
+
+---
+
+# 📈 What This Project Demonstrates
+
+Rather than treating an AI agent as simply:
+
+```text
+Prompt → LLM → Response
+```
+
+the project treats the agent as a complete software system:
+
+```text
+                ┌───────────────┐
+                │     User      │
+                └───────┬───────┘
+                        │
+                        ▼
+                ┌───────────────┐
+                │    Frontend   │
+                └───────┬───────┘
+                        │
+                        ▼
+                ┌───────────────┐
+                │     Agent     │
+                └───────┬───────┘
+                        │
+          ┌─────────────┼─────────────┐
+          ▼             ▼             ▼
+       Memory        Gateway         Tools
+          │             │             │
+          └─────────────┼─────────────┘
+                        ▼
+                    Governance
+                  ┌─────┴─────┐
+                  ▼           ▼
+               Policy     Guardrails
+                  │           │
+                  └─────┬─────┘
+                        ▼
+                     Runtime
+                        │
+                        ▼
+                  Observability
+                        │
+                        ▼
+                   Evaluations
+                        │
+                        ▼
+                  Optimization
+                        │
+                        ▼
+                    A/B Test
+                        │
+                        ▼
+                  Winning Agent
+```
+
+This provides a foundation for building AI systems that are not only capable of answering questions, but can also be **secured, measured, monitored, evaluated, and continuously improved**.
+
+---
+
+# 🔮 Future Enhancements
+
+Potential future extensions include:
+
+* Enterprise knowledge-base / RAG integration
+* Production CRM integration
+* Order-management integration
+* Customer identity integration
+* Additional MCP servers
+* Advanced memory strategies
 * Human-agent escalation
-* Structured tool responses
-* Agent evaluation and automated testing
-* CloudWatch-based monitoring
-* Agent identity and authorization
-* Additional enterprise support tools
+* Custom evaluation datasets
+* Automated regression testing
+* CI/CD integration
+* Infrastructure as Code
 * Multi-agent orchestration
+* Cost optimization
+* Advanced security policies
+* Production traffic management
+* Automated promotion and rollback workflows
 
-## 👨‍💻 Author
+---
+
+# 👨‍💻 Author
 
 **Rakesh Bhandarkar**
 
@@ -444,12 +986,18 @@ GitHub: [@rakesh-codex](https://github.com/rakesh-codex)
 
 ---
 
-## 📚 References
+# 📚 References
 
-* [Amazon Bedrock AgentCore Documentation](https://docs.aws.amazon.com/bedrock-agentcore/)
-* [AgentCore Runtime Documentation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html)
-* [AgentCore Memory Documentation](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-get-started.html)
-* [AWS AgentCore CLI](https://github.com/aws/agentcore-cli)
+* [Amazon Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/)
+* [AgentCore Runtime](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-get-started-cli.html)
+* [AgentCore Memory](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/memory-get-started.html)
+* [AgentCore Gateway](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway.html)
+* [AgentCore Policy](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy.html)
+* [AgentCore Guardrails](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy-guardrails-in-policies.html)
+* [AgentCore Evaluations](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/evaluations.html)
+* [AgentCore Harness](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/harness.html)
+* [AgentCore Optimization](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/optimization.html)
+* [AgentCore A/B Testing](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/ab-testing.html)
 
 ---
 
